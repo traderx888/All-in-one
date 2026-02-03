@@ -1,0 +1,42 @@
+# ============================================================
+# AI Models Configuration
+# 模型配置 - 為不同角色分配適當的模型
+# ============================================================
+
+models:
+  # 高層決策使用最強模型
+  executive:
+    default: "claude-opus-4-5-20251101"
+    fallback: "claude-sonnet-4-20250514"
+
+  # 管理層使用強力模型
+  management:
+    default: "claude-sonnet-4-20250514"
+    fallback: "claude-sonnet-4-20250514"
+
+  # 執行層根據任務類型選擇
+  operational:
+    complex_reasoning: "claude-sonnet-4-20250514"
+    code_generation: "claude-sonnet-4-20250514"
+    simple_tasks: "claude-haiku-3-5-20241022"
+
+  # 專門任務
+  specialized:
+    content_generation: "claude-sonnet-4-20250514"
+    data_analysis: "claude-sonnet-4-20250514"
+    compliance_check: "claude-sonnet-4-20250514"
+
+# 模型參數預設
+default_parameters:
+  temperature: 0.7
+  max_tokens: 4096
+
+# 各角色溫度設定
+role_temperatures:
+  Secretary: 0.3          # 精確理解意圖
+  ComplianceChecker: 0.1  # 嚴格合規檢查
+  MasterArchitect: 0.5    # 創意架構設計
+  Researcher: 0.4         # 深度研究
+  Foreman: 0.3            # 精確任務管理
+  Workers: 0.2            # 精確代碼生成
+  ContentGenerator: 0.8   # 創意內容

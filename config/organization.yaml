@@ -1,0 +1,88 @@
+# ============================================================
+# AI Organization Configuration
+# 完整 AI 組織架構配置
+# ============================================================
+
+organization:
+  name: "All-in-One AI Corp"
+  version: "1.0.0"
+
+  # 組織層級定義
+  hierarchy:
+    - level: 0
+      name: "Executive"
+      description: "最高決策層 - CEO 直屬"
+      agents: ["Secretary", "Librarian"]
+
+    - level: 1
+      name: "Management Hub"
+      description: "管理中樞 - 協調與監管"
+      zones:
+        - name: "ARD"
+          full_name: "Agent Resource Development"
+          agents: ["SystemPilot", "NewTaskManager", "DatabaseChecker", "MasterArchitect"]
+        - name: "LAW"
+          full_name: "Law & Compliance"
+          agents: ["ComplianceChecker"]
+
+    - level: 2
+      name: "Departments"
+      description: "執行部門"
+      departments:
+        - name: "ContentDev"
+          type: "operational"
+          description: "內容開發部 - 半流水線模式"
+        - name: "ProductDev"
+          type: "project-based"
+          description: "產品開發部 - 動態團隊模式"
+        - name: "TradingDev"
+          type: "project-based"
+          description: "交易開發部 - 動態團隊模式"
+
+# 動態團隊配置
+dynamic_teams:
+  # 標準項目團隊結構
+  standard_structure:
+    - role: "Researcher"
+      icon: "🔍"
+      responsibility: "研究參考資料、市場分析、技術調研"
+      spawn_count: 1
+
+    - role: "Foreman"
+      icon: "👷"
+      responsibility: "接洽需求、任務分解、監督進度"
+      spawn_count: 1
+
+    - role: "Workers"
+      icon: "🛠"
+      responsibility: "代碼開發、模組實現"
+      spawn_count: "dynamic"  # 根據任務複雜度動態分配
+
+# 部門間通訊規則
+communication:
+  protocols:
+    - name: "top-down"
+      description: "由上至下的指令傳遞"
+      flow: "CEO → Secretary → ManagementHub → Departments"
+
+    - name: "bottom-up"
+      description: "由下至上的報告機制"
+      flow: "Departments → ManagementHub → Secretary → CEO"
+
+    - name: "cross-department"
+      description: "跨部門協作需經管理中樞批准"
+      requires_approval: true
+      approver: "NewTaskManager"
+
+# 資源配額
+resource_quotas:
+  max_concurrent_projects: 10
+  max_workers_per_project: 5
+  token_budget_per_task: 100000
+
+# 審計配置
+compliance:
+  require_code_review: true
+  require_content_review: true
+  log_all_actions: true
+  retention_days: 90
