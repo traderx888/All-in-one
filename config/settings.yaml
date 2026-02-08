@@ -1,0 +1,66 @@
+# ============================================================
+# All-in-One Multi-Agent Trading System - Global Settings
+# ============================================================
+
+system:
+  name: "All-in-One Trading System"
+  version: "0.1.0"
+  log_level: "INFO"
+  data_dir: "data"
+
+# --- Exchange Configuration ---
+exchange:
+  name: "binance"
+  testnet: true
+  rate_limit: true
+  default_type: "spot"    # spot | future | swap
+
+# --- Trading Parameters ---
+trading:
+  default_timeframe: "5m"
+  max_open_positions: 5
+  risk_per_trade_pct: 1.0
+  max_drawdown_pct: 10.0
+  base_currency: "USDT"
+  watchlist:
+    - "BTC/USDT"
+    - "ETH/USDT"
+    - "SOL/USDT"
+
+# --- Division Toggles ---
+divisions:
+  trading_dev:
+    enabled: true
+    daytrade_engine:
+      enabled: true
+      strategies: ["momentum", "mean_reversion"]
+    auto_trading:
+      enabled: true
+      mode: "paper"        # paper | live
+    signal_alert:
+      enabled: true
+      channels: ["telegram", "console"]
+
+  product_dev:
+    enabled: false
+    article_rss:
+      enabled: false
+    polymarket:
+      enabled: false
+    telegram_bot:
+      enabled: false
+
+  content_dev:
+    enabled: false
+
+# --- Database ---
+database:
+  url: "sqlite+aiosqlite:///data/trading.db"
+  echo: false
+
+# --- Notifications ---
+notifications:
+  telegram:
+    enabled: false
+  console:
+    enabled: true
