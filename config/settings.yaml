@@ -1,0 +1,67 @@
+# Twitter/X Asset Monitoring - Global Settings
+
+# --- Scraper Configuration ---
+scraper:
+  # Backend to use: "api" | "nitter" | "browser"
+  #   api     - Official Twitter API v2 (requires Bearer Token, most reliable)
+  #   nitter  - Nitter RSS feeds (free, but instances may go down)
+  #   browser - Playwright browser automation (heavy but works without API)
+  backend: "nitter"
+
+  # Nitter instances to try (in order of priority)
+  # These rotate if one goes down
+  nitter_instances:
+    - "https://nitter.privacydev.net"
+    - "https://nitter.poast.org"
+    - "https://nitter.woodland.cafe"
+
+  # Twitter API v2 settings (only needed if backend: "api")
+  twitter_api:
+    bearer_token: ""  # Set via env var TWITTER_BEARER_TOKEN
+
+  # Request settings
+  request_timeout: 30          # seconds
+  max_retries: 3
+  retry_delay: 5               # seconds between retries
+  user_agent: "Mozilla/5.0 (compatible; AssetMonitor/1.0)"
+
+# --- Polling Schedule ---
+schedule:
+  high_priority_interval: 120    # seconds (2 min)
+  medium_priority_interval: 300  # seconds (5 min)
+  low_priority_interval: 900     # seconds (15 min)
+
+# --- Database ---
+database:
+  path: "data/tweets.db"
+  max_tweets_per_account: 5000   # Keep last N tweets per account
+
+# --- Notifications ---
+notifications:
+  # Enable/disable notification channels
+  telegram:
+    enabled: false
+    bot_token: ""       # Set via env var TELEGRAM_BOT_TOKEN
+    chat_id: ""         # Set via env var TELEGRAM_CHAT_ID
+
+  discord:
+    enabled: false
+    webhook_url: ""     # Set via env var DISCORD_WEBHOOK_URL
+
+  line:
+    enabled: false
+    access_token: ""    # Set via env var LINE_NOTIFY_TOKEN
+
+  console:
+    enabled: true       # Always print to console
+
+  # Notification formatting
+  include_sector_tag: true    # Prefix messages with [SECTOR] tag
+  include_tweet_link: true    # Include link to original tweet
+
+# --- Logging ---
+logging:
+  level: "INFO"               # DEBUG | INFO | WARNING | ERROR
+  file: "data/monitor.log"
+  max_size_mb: 10
+  backup_count: 3
