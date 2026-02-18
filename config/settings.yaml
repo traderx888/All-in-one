@@ -2,14 +2,20 @@
 
 # --- Scraper Configuration ---
 scraper:
-  # Backend to use: "api" | "nitter" | "browser"
-  #   api     - Official Twitter API v2 (requires Bearer Token, most reliable)
-  #   nitter  - Nitter RSS feeds (free, but instances may go down)
-  #   browser - Playwright browser automation (heavy but works without API)
-  backend: "nitter"
+  # Backend to use: "scweet" | "api" | "nitter"
+  #   scweet  - Scweet (X GraphQL API + cookies) - RECOMMENDED for 2025-2026
+  #   api     - Official Twitter API v2 (requires Bearer Token, $100+/mo)
+  #   nitter  - Nitter RSS feeds (mostly dead in 2025+, unreliable)
+  backend: "scweet"
 
-  # Nitter instances to try (in order of priority)
-  # These rotate if one goes down
+  # Scweet settings (recommended backend)
+  # Uses X's internal GraphQL API with cookie authentication
+  # See README for how to get your cookies
+  scweet:
+    cookies_file: "config/cookies.json"   # X account cookies
+    db_path: "data/scweet_state.db"       # Scweet internal state
+
+  # Nitter instances (fallback only - most are dead)
   nitter_instances:
     - "https://nitter.privacydev.net"
     - "https://nitter.poast.org"
@@ -24,6 +30,13 @@ scraper:
   max_retries: 3
   retry_delay: 5               # seconds between retries
   user_agent: "Mozilla/5.0 (compatible; AssetMonitor/1.0)"
+
+# --- Sentiment Analysis ---
+sentiment:
+  enabled: true                           # Enable FinTwitBERT sentiment scoring
+  model: "StephanAkkerman/FinTwitBERT-sentiment"  # HuggingFace model ID
+  show_in_console: true                   # Show sentiment in terminal output
+  show_in_notifications: true             # Include sentiment in Telegram/Discord/LINE
 
 # --- Polling Schedule ---
 schedule:

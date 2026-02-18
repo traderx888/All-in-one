@@ -26,18 +26,25 @@ class TelegramNotifier(BaseNotifier):
             self.session = aiohttp.ClientSession()
         return self.session
 
-    def _format_message(self, tweet: Tweet) -> str:
+    def _format_message(self, tweet: Tweet, sentiment: dict = None) -> str:
         sector = tweet.sector.upper() if tweet.sector else "GENERAL"
         lines = [
             f"🔔 <b>[{sector}]</b> New tweet from <b>@{tweet.username}</b>",
+        ]
+        if sentiment and sentiment.get("label"):
+            emoji = sentiment.get("emoji", "")
+            label = sentiment["label"]
+            score = sentiment.get("score", 0)
+            lines.append(f"{emoji} Sentiment: <b>{label}</b> ({score:.0%})")
+        lines.extend([
             "",
             tweet.text,
             "",
             f'<a href="{tweet.tweet_link}">View on X</a>',
-        ]
+        ])
         return "\n".join(lines)
 
-    async def send(self, tweet: Tweet) -> bool:
+    async def send(self, tweet: Tweet, sentiment: dict = None) -> bool:
         if not self.bot_token or not self.chat_id:
             logger.warning("Telegram not configured (missing token or chat_id)")
             return False
@@ -46,7 +53,7 @@ class TelegramNotifier(BaseNotifier):
         url = TELEGRAM_API.format(token=self.bot_token)
         payload = {
             "chat_id": self.chat_id,
-            "text": self._format_message(tweet),
+            "text": self._format_message(tweet, sentiment),
             "parse_mode": "HTML",
             "disable_web_page_preview": False,
         }

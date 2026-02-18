@@ -23,7 +23,7 @@ class DiscordNotifier(BaseNotifier):
             self.session = aiohttp.ClientSession()
         return self.session
 
-    def _format_embed(self, tweet: Tweet) -> dict:
+    def _format_embed(self, tweet: Tweet, sentiment: dict = None) -> dict:
         sector = tweet.sector.upper() if tweet.sector else "GENERAL"
         color_map = {
             "semiconductor": 0x3498DB,
@@ -34,11 +34,18 @@ class DiscordNotifier(BaseNotifier):
         }
         color = color_map.get(tweet.sector, 0x95A5A6)
 
+        description = tweet.text
+        if sentiment and sentiment.get("label"):
+            emoji = sentiment.get("emoji", "")
+            label = sentiment["label"]
+            score = sentiment.get("score", 0)
+            description = f"{emoji} **{label}** ({score:.0%})\n\n{tweet.text}"
+
         return {
             "embeds": [
                 {
                     "title": f"[{sector}] @{tweet.username}",
-                    "description": tweet.text,
+                    "description": description,
                     "url": tweet.tweet_link,
                     "color": color,
                     "timestamp": tweet.created_at.isoformat(),
@@ -47,13 +54,13 @@ class DiscordNotifier(BaseNotifier):
             ]
         }
 
-    async def send(self, tweet: Tweet) -> bool:
+    async def send(self, tweet: Tweet, sentiment: dict = None) -> bool:
         if not self.webhook_url:
             logger.warning("Discord webhook URL not configured")
             return False
 
         session = await self._get_session()
-        payload = self._format_embed(tweet)
+        payload = self._format_embed(tweet, sentiment)
 
         try:
             async with session.post(self.webhook_url, json=payload) as resp:

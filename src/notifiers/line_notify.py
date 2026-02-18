@@ -27,22 +27,24 @@ class LineNotifier(BaseNotifier):
             )
         return self.session
 
-    def _format_message(self, tweet: Tweet) -> str:
+    def _format_message(self, tweet: Tweet, sentiment: dict = None) -> str:
         sector = tweet.sector.upper() if tweet.sector else "GENERAL"
-        lines = [
-            f"\n[{sector}] @{tweet.username}",
-            tweet.text,
-            tweet.tweet_link,
-        ]
+        lines = [f"\n[{sector}] @{tweet.username}"]
+        if sentiment and sentiment.get("label"):
+            emoji = sentiment.get("emoji", "")
+            label = sentiment["label"]
+            score = sentiment.get("score", 0)
+            lines.append(f"{emoji} {label} ({score:.0%})")
+        lines.extend([tweet.text, tweet.tweet_link])
         return "\n".join(lines)
 
-    async def send(self, tweet: Tweet) -> bool:
+    async def send(self, tweet: Tweet, sentiment: dict = None) -> bool:
         if not self.access_token:
             logger.warning("LINE Notify token not configured")
             return False
 
         session = await self._get_session()
-        payload = {"message": self._format_message(tweet)}
+        payload = {"message": self._format_message(tweet, sentiment)}
 
         try:
             async with session.post(LINE_NOTIFY_API, data=payload) as resp:

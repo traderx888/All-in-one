@@ -4,8 +4,9 @@ __pycache__/
 dist/
 build/
 .env
-data/tweets.db
-data/monitor.log*
+config/cookies.json
+data/
+*.db
 .venv/
 venv/
 *.swp

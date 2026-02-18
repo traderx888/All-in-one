@@ -58,7 +58,8 @@ def monitor(ctx):
     db = Database(settings.get("database", {}).get("path", "data/tweets.db"))
     scraper = create_scraper(settings)
     notifiers = create_notifiers(settings)
-    engine = MonitorEngine(scraper, db, notifiers)
+    sentiment_enabled = settings.get("sentiment", {}).get("enabled", False)
+    engine = MonitorEngine(scraper, db, notifiers, sentiment_enabled=sentiment_enabled)
 
     schedule_cfg = settings.get("schedule", {})
     scheduler = MonitorScheduler(
@@ -182,7 +183,8 @@ def check(ctx, username):
     db = Database(settings.get("database", {}).get("path", "data/tweets.db"))
     scraper = create_scraper(settings)
     notifiers = create_notifiers(settings)
-    engine = MonitorEngine(scraper, db, notifiers)
+    sentiment_enabled = settings.get("sentiment", {}).get("enabled", False)
+    engine = MonitorEngine(scraper, db, notifiers, sentiment_enabled=sentiment_enabled)
     account = Account(username=username, priority="high", sectors=["manual_check"])
 
     console.print(f"Checking @{username}...")
@@ -230,6 +232,106 @@ def stats(ctx):
 
     console.print(table)
     db.close()
+
+
+@cli.command()
+@click.option("--text", "-t", default=None, help="Analyze a single text string")
+@click.option("--username", "-u", default=None, help="Analyze stored tweets from @username")
+@click.option("--sector", "-s", default=None, help="Analyze stored tweets from a sector")
+@click.option("--limit", "-n", default=10, help="Number of stored tweets to analyze")
+@click.pass_context
+def sentiment(ctx, text, username, sector, limit):
+    """Run FinTwitBERT sentiment analysis on text or stored tweets."""
+    try:
+        from src.sentiment import analyze_sentiment, analyze_tweets_batch
+    except ImportError:
+        console.print(
+            "[red]Sentiment analysis requires transformers and torch.[/red]\n"
+            "Run: pip install transformers torch"
+        )
+        sys.exit(1)
+
+    if text:
+        # Analyze a single text input
+        console.print(f"[dim]Analyzing:[/dim] {text}\n")
+        result = analyze_sentiment(text)
+        emoji_map = {"Bullish": "🟢", "Bearish": "🔴", "Neutral": "⚪"}
+        emoji = emoji_map.get(result["label"], "⚪")
+        label_style = {
+            "Bullish": "bold green",
+            "Bearish": "bold red",
+            "Neutral": "dim",
+        }.get(result["label"], "")
+        console.print(
+            f"  {emoji} [{label_style}]{result['label']}[/{label_style}] "
+            f"(confidence: {result['score']:.1%})"
+        )
+        return
+
+    # Analyze stored tweets from database
+    settings = load_settings(ctx.obj.get("settings_path"))
+    db = Database(settings.get("database", {}).get("path", "data/tweets.db"))
+    rows = db.get_recent_tweets(username=username, sector=sector, limit=limit)
+    db.close()
+
+    if not rows:
+        console.print("[dim]No stored tweets found. Run 'check' or 'monitor' first.[/dim]")
+        return
+
+    # Convert db rows to Tweet objects for batch analysis
+    from src.models.tweet import Tweet
+    from datetime import datetime
+
+    tweets = []
+    for r in rows:
+        try:
+            created = datetime.fromisoformat(r["created_at"])
+        except (ValueError, TypeError):
+            created = datetime.utcnow()
+        tweets.append(Tweet(
+            tweet_id=r["tweet_id"],
+            username=r["username"],
+            text=r["text"],
+            created_at=created,
+            url=r.get("url", ""),
+            sector=r.get("sector", ""),
+        ))
+
+    console.print(f"[dim]Analyzing {len(tweets)} tweets...[/dim]\n")
+    results = analyze_tweets_batch(tweets)
+
+    table = Table(title="Sentiment Analysis", show_lines=True)
+    table.add_column("", width=2)
+    table.add_column("Account", style="cyan")
+    table.add_column("Sector", style="yellow")
+    table.add_column("Sentiment", width=12)
+    table.add_column("Conf.", justify="right", width=6)
+    table.add_column("Tweet", max_width=50)
+
+    for r in results:
+        label_style = {
+            "Bullish": "bold green",
+            "Bearish": "bold red",
+            "Neutral": "dim",
+        }.get(r["label"], "")
+        table.add_row(
+            r["emoji"],
+            f"@{r['username']}",
+            r.get("sector", ""),
+            f"[{label_style}]{r['label']}[/{label_style}]",
+            f"{r['score']:.0%}",
+            r["text_preview"],
+        )
+
+    console.print(table)
+
+    # Summary
+    bullish = sum(1 for r in results if r["label"] == "Bullish")
+    bearish = sum(1 for r in results if r["label"] == "Bearish")
+    neutral = sum(1 for r in results if r["label"] == "Neutral")
+    console.print(
+        f"\n  Summary: 🟢 Bullish {bullish} | 🔴 Bearish {bearish} | ⚪ Neutral {neutral}"
+    )
 
 
 if __name__ == "__main__":

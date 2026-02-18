@@ -21,7 +21,15 @@ def create_scraper(settings: dict) -> BaseScraper:
     timeout = scraper_cfg.get("request_timeout", 30)
     user_agent = scraper_cfg.get("user_agent", "")
 
-    if backend == "api":
+    if backend == "scweet":
+        from src.scrapers.scweet import ScweetScraper
+        scweet_cfg = scraper_cfg.get("scweet", {})
+        logger.info("Using Scweet (X GraphQL) backend")
+        return ScweetScraper(
+            cookies_file=scweet_cfg.get("cookies_file", "config/cookies.json"),
+            db_path=scweet_cfg.get("db_path", "data/scweet_state.db"),
+        )
+    elif backend == "api":
         token = scraper_cfg.get("twitter_api", {}).get("bearer_token", "")
         logger.info("Using Twitter API v2 backend")
         return TwitterAPIScraper(bearer_token=token, timeout=timeout)

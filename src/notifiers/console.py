@@ -30,7 +30,7 @@ class ConsoleNotifier(BaseNotifier):
         self.include_sector_tag = include_sector_tag
         self.include_link = include_link
 
-    async def send(self, tweet: Tweet) -> bool:
+    async def send(self, tweet: Tweet, sentiment: dict = None) -> bool:
         sector = tweet.sector or "general"
         color = SECTOR_COLORS.get(sector, "bright_white")
 
@@ -39,6 +39,18 @@ class ConsoleNotifier(BaseNotifier):
             title.append(f"[{sector.upper()}] ", style=f"bold {color}")
         title.append(f"@{tweet.username}", style="bold cyan")
         title.append(f"  {tweet.created_at.strftime('%Y-%m-%d %H:%M')}", style="dim")
+
+        # Append sentiment badge to title
+        if sentiment and sentiment.get("label"):
+            emoji = sentiment.get("emoji", "")
+            label = sentiment["label"]
+            score = sentiment.get("score", 0)
+            sentiment_style = {
+                "Bullish": "bold green",
+                "Bearish": "bold red",
+                "Neutral": "dim",
+            }.get(label, "dim")
+            title.append(f"  {emoji} {label} ({score:.0%})", style=sentiment_style)
 
         body = Text(tweet.text)
         if self.include_link:

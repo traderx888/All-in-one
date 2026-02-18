@@ -1,4 +1,4 @@
-"""Core monitoring engine - orchestrates scraping, storage, and notifications."""
+"""Core monitoring engine - orchestrates scraping, storage, sentiment, and notifications."""
 
 import asyncio
 import logging
@@ -14,18 +14,43 @@ logger = logging.getLogger(__name__)
 
 
 class MonitorEngine:
-    """Coordinates fetching tweets, deduplicating, and sending notifications."""
+    """Coordinates fetching tweets, sentiment analysis, and sending notifications."""
 
     def __init__(
         self,
         scraper: BaseScraper,
         database: Database,
         notifiers: list[BaseNotifier],
+        sentiment_enabled: bool = False,
     ):
         self.scraper = scraper
         self.db = database
         self.notifiers = notifiers
+        self.sentiment_enabled = sentiment_enabled
+        self._sentiment_fn = None
         self._running = False
+
+        if sentiment_enabled:
+            try:
+                from src.sentiment import analyze_tweet
+                self._sentiment_fn = analyze_tweet
+                logger.info("Sentiment analysis enabled (FinTwitBERT)")
+            except ImportError:
+                logger.warning(
+                    "Sentiment analysis requested but transformers/torch not installed. "
+                    "Run: pip install transformers torch"
+                )
+                self.sentiment_enabled = False
+
+    def _enrich_with_sentiment(self, tweet: Tweet) -> dict:
+        """Run sentiment analysis on a tweet. Returns sentiment dict or empty."""
+        if not self.sentiment_enabled or not self._sentiment_fn:
+            return {}
+        try:
+            return self._sentiment_fn(tweet)
+        except Exception as e:
+            logger.warning("Sentiment analysis failed for tweet %s: %s", tweet.tweet_id, e)
+            return {}
 
     async def check_account(self, account: Account) -> list[Tweet]:
         """Fetch new tweets for a single account and notify."""
@@ -54,9 +79,10 @@ class MonitorEngine:
             newest_id = max(t.tweet_id for t in new_tweets)
             self.db.update_fetch_state(username, newest_id)
 
-            # Send notifications for each new tweet
+            # Analyze sentiment and send notifications for each new tweet
             for tweet in new_tweets:
-                await self._notify(tweet)
+                sentiment = self._enrich_with_sentiment(tweet)
+                await self._notify(tweet, sentiment=sentiment)
 
             logger.info(
                 "Found %d new tweets from @%s (sectors: %s)",
@@ -79,11 +105,11 @@ class MonitorEngine:
             await asyncio.sleep(1)
         return all_new
 
-    async def _notify(self, tweet: Tweet):
+    async def _notify(self, tweet: Tweet, sentiment: dict = None):
         """Send a tweet notification to all configured channels."""
         for notifier in self.notifiers:
             try:
-                await notifier.send(tweet)
+                await notifier.send(tweet, sentiment=sentiment)
             except Exception as e:
                 logger.error(
                     "Notifier %s failed for tweet %s: %s",
