@@ -1,0 +1,60 @@
+# Twitter/X Asset Monitoring - Account Configuration
+# Organize accounts by asset sector for targeted monitoring
+#
+# Structure:
+#   sectors:
+#     <sector_name>:
+#       description: "Brief description of this sector"
+#       accounts:
+#         - username: "twitter_handle (without @)"
+#           note: "Why this account is useful"
+#           priority: high | medium | low
+#
+# Priority levels:
+#   high   - Real-time alerts, never miss a tweet
+#   medium - Check every 5 minutes
+#   low    - Check every 15 minutes
+
+sectors:
+  semiconductor:
+    description: "Semiconductor & memory chip industry analysis"
+    accounts:
+      - username: "chipsandwafers"
+        note: "Semiconductor industry deep analysis"
+        priority: high
+      - username: "QQ_Timmy"
+        note: "Semiconductor/memory sector insights"
+        priority: high
+
+  gold:
+    description: "Gold market analysis and price tracking"
+    accounts:
+      - username: "kingkong9888"
+        note: "Precious metals analysis (gold & silver)"
+        priority: high
+      - username: "InProved_Metals"
+        note: "Gold market insights"
+        priority: medium
+
+  silver:
+    description: "Silver market analysis and price tracking"
+    accounts:
+      - username: "kingkong9888"
+        note: "Precious metals analysis (gold & silver)"
+        priority: high
+
+  # --- Add more sectors below ---
+  # Example:
+  # crypto:
+  #   description: "Cryptocurrency market analysis"
+  #   accounts:
+  #     - username: "example_handle"
+  #       note: "BTC/ETH analysis"
+  #       priority: high
+  #
+  # macro:
+  #   description: "Macro economics and Fed policy"
+  #   accounts:
+  #     - username: "example_handle"
+  #       note: "Fed watcher"
+  #       priority: medium

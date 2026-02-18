@@ -1,0 +1,12 @@
+aiohttp>=3.9.0
+pyyaml>=6.0
+rich>=13.0
+click>=8.1.0
+apscheduler>=3.10.0
+
+# Scweet scraper (recommended backend)
+Scweet>=2.0
+
+# Sentiment analysis (optional - install for FinTwitBERT)
+# transformers>=4.35.0
+# torch>=2.0
