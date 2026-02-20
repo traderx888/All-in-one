@@ -4,6 +4,7 @@ __pycache__/
 client_secrets.json
 token.json
 *.pickle
-content_input/
+content_input/*
+!content_input/.gitkeep
 .venv/
 venv/

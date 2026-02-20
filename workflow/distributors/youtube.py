@@ -78,13 +78,14 @@ def send_community_post(text: str) -> dict | str:
 
 def _fallback(text: str, reason: str = "") -> str:
     """Return a human-friendly message when automated posting isn't possible."""
+    separator = "─" * 40
+    reason_part = f" ({reason})" if reason else ""
     msg = (
-        "[YouTube] Automated community post not available"
-        f"{f' ({reason})' if reason else ''}.\n"
-        "Copy the text below and paste it as a community post on YouTube:\n"
-        "─" * 40 + "\n"
+        f"[YouTube] Automated community post not available{reason_part}.\n"
+        f"Copy the text below and paste it as a community post on YouTube:\n"
+        f"{separator}\n"
         f"{text}\n"
-        "─" * 40
+        f"{separator}"
     )
     print(msg)
     return msg
