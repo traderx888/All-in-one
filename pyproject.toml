@@ -1,0 +1,11 @@
+[project]
+name = "all-in-one"
+version = "0.1.0"
+description = "Multi-agent hierarchical system — one-person team powered by AI"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.42.0",
+]
+
+[project.scripts]
+aio = "multi_agent.main:main"
